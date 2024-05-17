@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Main page</h1>
+<p>Schedule</p>
+    <h2>Employees:</h2> 
+        {% for user in users %}
+        <ul>
+            <li><a href="">{{ user }}</a></li>
+        </ul>
+        {% endfor %}
+{% endblock content %}
