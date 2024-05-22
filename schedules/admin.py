@@ -31,3 +31,4 @@ class AvailabilityAdmin(admin.ModelAdmin):
 admin.site.register(User, UsersAdmin)
 admin.site.register(Vacation, VacationAdmin)
 admin.site.register(Availability, AvailabilityAdmin)
+# admin.site.register(Profile)

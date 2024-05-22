@@ -12,12 +12,20 @@ def home(request):
     }
     return render(request, 'home.html', context=data)
 
-def schedule_view(request):
-    users = User.objects.all()
-    current_date = datetime.date.today()  # Get the current date
+# def user_view(request):
+#     users = User.objects.all()
+
+#     context = {
+#         'users': users,
+#     }
+#     return render(request, 'user.html', context=context)
+
+def user_view(request):
+    current_user = request.user
+    # name = current_user.name
+    # last_name = current_user.last_name
 
     context = {
-        'users': users,
-        'current_date': current_date,
+        'current_user': current_user,
     }
-    return render(request, 'schedule.html', context)
+    return render(request, 'user.html', context=context)

@@ -5,7 +5,7 @@ from django.db.models import Q
 
 class User(models.Model):
     #id
-    name = models.CharField('Name', max_length=100)
+    name = models.CharField('First name', max_length=100)
     last_name = models.CharField('Last name', max_length=100)
     email = models.EmailField('Email', max_length=100)
     password = models.CharField('Password', max_length=100)
@@ -20,8 +20,15 @@ class User(models.Model):
     )
     working_hours = models.CharField('Working hours', max_length=4, default='1', choices=WORKING_HOURS)
 
+
     def __str__(self) -> str:
         return f'{self.name} {self.last_name}'
+    
+# class Profile(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    
+#     def __str__(self):
+#         return f'{self.user.username} Profile'
 
 class Vacation(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -34,6 +41,7 @@ class Vacation(models.Model):
         ('d', 'Bussines trip')
     )
     type = models.CharField('Type of vacation', max_length=1, default='a', choices=TYPE)
+    # users = models.ManyToManyField(User, on_delete=models.SET_NULL, null=True)
 
 class Availability(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -44,10 +52,7 @@ class Availability(models.Model):
     class Meta:
         verbose_name = 'Availability'
         verbose_name_plural = 'Availabilities'
-
-
-
-
+    
 
 
 #python manage.py makemigrations
