@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h3>User Availability for {{ today }}</h3>
+
+<h4>Users available today:</h4>
+
+<ul>
+    {% for item in available_users %}
+        <li>{{ item.user.username }}: {{ item.available_from }} - {{ item.available_until }}</li>
+    {% endfor %}
+</ul>
+
+<h4>Users not available today:</h4>
+
+<ul>
+    {% for item in not_available_users %}
+        <li>{{ item.user.username }}</li>
+    {% endfor %}
+</ul>
+
+{% endblock content %}
