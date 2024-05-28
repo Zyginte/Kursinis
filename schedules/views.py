@@ -44,6 +44,7 @@ def user_availability(request):
         'available_users': available_users,
         'not_available_users': not_available_users,
         'today': today,
+        'hours_range': range(24)
     }
 
     return render(request, 'schedule.html', context=data)
