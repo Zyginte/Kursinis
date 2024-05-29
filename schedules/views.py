@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from schedules.models import Schedule, Availability
+from schedules.models import Schedule, Availability, Vacation
 from django.utils import timezone
 from django.contrib.auth.models import User
 
@@ -17,9 +17,13 @@ def user_availability(request):
     today = timezone.now().date()
     users = User.objects.all()
     availabilities_today = Availability.objects.filter(day=today)
+    user_vacation = Vacation.objects.filter(first_day__lte=today, last_day__gte=today)
+
+    vacation_map = {vacation.user_id: vacation for vacation in user_vacation}
 
     availability_map = {availability.user_id: availability for availability in availabilities_today}
 
+    users_on_vacation = []
     available_users = []
     not_available_users = []
 
@@ -34,8 +38,19 @@ def user_availability(request):
                 'available_from': available_from,
                 'available_until': available_until,
             })
+        elif user.id in vacation_map:
+            on_vacation = vacation_map[user.id]
+            on_vacation_from = on_vacation.first_day
+            on_vacation_until = on_vacation.last_day
 
+            not_available_users.append({
+                'user': user,
+                'on_vacation_from': on_vacation_from,
+                'on_vacation_until': on_vacation_until,
+                'type': on_vacation.get_type_display(),
+            })
         else:
+            # If neither available nor on vacation, add to not_available_users
             not_available_users.append({
                 'user': user,
             })
@@ -43,6 +58,7 @@ def user_availability(request):
     data = {
         'available_users': available_users,
         'not_available_users': not_available_users,
+        'users_on_vacation': users_on_vacation,
         'today': today,
         'hours_range': range(24)
     }

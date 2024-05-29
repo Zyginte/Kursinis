@@ -39,6 +39,10 @@ class Vacation(models.Model):
     type = models.CharField('Type of vacation', max_length=1, default='a', choices=TYPE)
     # users = models.ManyToManyField(User, on_delete=models.SET_NULL, null=True)
 
+    def __str__(self):
+        return f'{self.user} {self.first_day} {self.last_day} {self.type})'
+
+
 class Availability(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     day = models.DateField('Day', null=False)

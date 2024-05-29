@@ -25,4 +25,4 @@ urlpatterns = [
     path('schedules/', include('schedules.urls')), #Parasome appso 'schedules' marsruta(gali buti betkoks), schedules app'so urls filo marsrutas, 
     path('', RedirectView.as_view(url='schedules/')),
     path('accounts/', include('django.contrib.auth.urls')),
-]# + static(settings.STATIC_URL, document_root=settings.STATIC_URL)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_URL)

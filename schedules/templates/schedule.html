@@ -2,58 +2,67 @@
 
 {% block content %}
 
-{% comment %}
-<h3>User Availability for {{ today }}</h3>
-
-<h4>Users available today:</h4>
-
-<ul>
-    {% for item in available_users %}
-        <li>{{ item.user.username }}: {{ item.available_from }} - {{ item.available_until }}</li>
-    {% endfor %}
-</ul>
-
-<h4>Users not available today:</h4>
-
-<ul>
-    {% for item in not_available_users %}
-        <li>{{ item.user.username }}</li>
-    {% endfor %}
-</ul>
-{% endcomment %}
-
 
 <h3>User Availability for {{ today }}</h3>
 
 
-<table>
-    <thead>
-        <tr>
-        <th></th>
-        {% for hour in hours_range %}
-            <th>{{ hour }}:00</th>
-        {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Availability</td>
-            {% for hour in hours_range %}
+    <table>
+        <thead>
+            <tr>
+                <th>USERS</th>
+                <th></th>
+                {% for hour in hours_range %}
+                    <th colspan="10">{{ hour }}:00</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for hour in hours_range %}
+                    <td>
+                        <!-- Add your logic here for each hour if needed -->
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
                 <td>
-                    <!-- Add your logic here for each hour if needed -->
-                </td>
-            {% endfor %}
-        </tr>
-        <tr>
-            <td>
-                <ul>
                     {% for user in available_users %}
-                        {{ user.user.username }}: {{ user.available_from|default_if_none:"Not available" }} - {{ user.available_until|default_if_none:"Not available" }} <br>
+                        {{ user.user.username }}:
+                        {{ user.available_from|default_if_none:"Not available" }} - {{ user.available_until|default_if_none:"Not available" }}
                     {% endfor %}
-                </ul>
-            </td>
-        </tr>
-    </tbody>
-  </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+<br>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Not available users</th>
+            </tr>
+            <tr>
+                <th>User</th>
+                <th>On vacation from:</th>
+                <th>On vacation until:</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for user in not_available_users %} 
+                <tr>
+                    <td>{{ user.user.username }}</td>
+                    {% if user.on_vacation_from %}
+                    <td>{{ user.on_vacation_from }}</td>
+                    <td>{{ user.on_vacation_until }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
 {% endblock content %}
