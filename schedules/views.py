@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from schedules.models import Schedule, Availability, Vacation
+from schedules.models import Availability, Vacation, CustomUser
 from django.utils import timezone
 from django.contrib.auth.models import User
 

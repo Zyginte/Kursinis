@@ -1,8 +1,26 @@
 from django import forms
 from django.contrib import admin
-from schedules.models import Vacation, Availability
+from schedules.models import CustomUser, Vacation, Availability
 
 # Register your models here.
+
+class CustomUserAdmin(admin.ModelAdmin):
+    model = CustomUser
+    list_display = ['email', 'name', 'last_name', 'position', 'working_hours', 'is_staff', 'is_active']
+    list_filter = ['is_staff', 'is_active']
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('name', 'last_name', 'position', 'working_hours')}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'name', 'last_name', 'position', 'working_hours', 'password1', 'password2', 'is_staff', 'is_active')}
+        ),
+    )
+    search_fields = ('email', 'name', 'last_name')
+    ordering = ('email',)
 
 #----------VACATION
 class UsersVacationInline(admin.TabularInline):
@@ -40,6 +58,7 @@ class AvailabilityAdmin(admin.ModelAdmin):
 
 
 # admin.site.register(User)
+admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Vacation, VacationAdmin)
 admin.site.register(Availability, AvailabilityAdmin)
 

@@ -1,33 +1,63 @@
 from django.db import models
+from django.conf import settings
 from django.db.models import Q
-from django.contrib.auth.models import User
-import datetime
+from django.contrib.auth.models import User, AbstractBaseUser, BaseUserManager, PermissionsMixin
+
 
 # Create your models here.
 
-# class User(models.Model):
-#     #id
-#     name = models.CharField('First name', max_length=100)
-#     last_name = models.CharField('Last name', max_length=100)
-#     email = models.EmailField('Email', max_length=100)
-#     password = models.CharField('Password', max_length=100)
-#     position = models.CharField('Position', max_length=100)
-#     WORKING_HOURS = (
-#         ('1', '1 (160h/month)'),
-#         ('0.75', '0.75 (120h/month)'),
-#         ('0.5', '0.5 (80h/month)'),
-#         ('0.25', '0.25 (40h/month)'),
-#         ('1.25', '1.25 (180h/month)'),
-#         ('1.5', '1.5 (200h/month)')
-#     )
-#     working_hours = models.CharField('Working hours', max_length=4, default='1', choices=WORKING_HOURS)
 
+#----------CUSTOM USER----------#
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, name, last_name, position, working_hours, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name, last_name=last_name, position=position, working_hours=working_hours, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-#     def __str__(self) -> str:
-#         return f'{self.name} {self.last_name}'
+    def create_superuser(self, email, name, last_name, position, working_hours, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
 
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, name, last_name, position, working_hours, password, **extra_fields)
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    position = models.CharField(max_length=100)
+    WORKING_HOURS = (
+        ('1', '1 (160h/month)'),
+        ('0.75', '0.75 (120h/month)'),
+        ('0.5', '0.5 (80h/month)'),
+        ('0.25', '0.25 (40h/month)'),
+        ('1.25', '1.25 (180h/month)'),
+        ('1.5', '1.5 (200h/month)')
+    )
+    working_hours = models.CharField(max_length=4, choices=WORKING_HOURS, default='1')
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name', 'last_name', 'position', 'working_hours']
+
+    def __str__(self):
+        return f'{self.name} {self.last_name}'
+    
+#----------VACATION----------#
 class Vacation(models.Model):
-    user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE, default=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE, default=models.CASCADE)
     first_day = models.DateField('First day', null=False)
     last_day = models.DateField('Last day', null=False)
     TYPE = (
@@ -43,8 +73,9 @@ class Vacation(models.Model):
         return f'{self.user} {self.first_day} {self.last_day} {self.type})'
 
 
+#----------AVAILABILITY----------#
 class Availability(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     day = models.DateField('Day', null=False)
     start_time = models.TimeField('Available from', null=True, blank=True)
     end_time = models.TimeField('Available to', null=True, blank=True)
@@ -56,8 +87,10 @@ class Availability(models.Model):
     def __str__(self):
         return f'{self.user} {self.day} {self.start_time} {self.end_time})'
 
-class Schedule(models.Model):
-    availability = models.ForeignKey(Availability, on_delete=models.SET_NULL, null=True)
+
+
+# class Schedule(models.Model):
+#     availability = models.ForeignKey(Availability, on_delete=models.SET_NULL, null=True)
 
     
 
