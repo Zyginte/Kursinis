@@ -57,7 +57,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
 #----------VACATION----------#
 class Vacation(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE, default=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE)
     first_day = models.DateField('First day', null=False)
     last_day = models.DateField('Last day', null=False)
     TYPE = (

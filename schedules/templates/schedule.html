@@ -27,7 +27,7 @@
             <tr>
                 <td>
                     {% for user in available_users %}
-                        {{ user.user.username }}:
+                        {{ user.user.name }} {{ user.user.last_name }}:
                         {{ user.available_from|default_if_none:"Not available" }} - {{ user.available_until|default_if_none:"Not available" }}
                     {% endfor %}
                 </td>
@@ -52,7 +52,7 @@
         <tbody>
             {% for user in not_available_users %} 
                 <tr>
-                    <td>{{ user.user.username }}</td>
+                    <td>{{ user.user.name }} {{ user.user.last_name }}</td>
                     {% if user.on_vacation_from %}
                     <td>{{ user.on_vacation_from }}</td>
                     <td>{{ user.on_vacation_until }}</td>

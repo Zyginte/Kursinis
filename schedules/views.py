@@ -2,12 +2,11 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from schedules.models import Availability, Vacation, CustomUser
 from django.utils import timezone
-from django.contrib.auth.models import User
 
 # Create your views here.
 
 def home(request):
-    users = User.objects.all()
+    users = CustomUser.objects.all()
     data = {
         'users': users,
     }
@@ -15,7 +14,7 @@ def home(request):
 
 def user_availability(request):
     today = timezone.now().date()
-    users = User.objects.all()
+    users = CustomUser.objects.all()
     availabilities_today = Availability.objects.filter(day=today)
     user_vacation = Vacation.objects.filter(first_day__lte=today, last_day__gte=today)
 

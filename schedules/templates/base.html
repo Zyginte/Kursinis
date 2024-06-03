@@ -11,7 +11,7 @@
     <div>
         <ul>
             {% if user.is_authenticated %}
-            <h1>Loged in as {{ user.get_username }}</h1>
+            <h1>Loged in as {{ user.name }}</h1>
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'logout'%}?next=/library">Logout</a></li>
             {% else %}

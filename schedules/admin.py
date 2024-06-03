@@ -1,10 +1,13 @@
 from django import forms
 from django.contrib import admin
 from schedules.models import CustomUser, Vacation, Availability
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 # Register your models here.
 
 class CustomUserAdmin(admin.ModelAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
     model = CustomUser
     list_display = ['email', 'name', 'last_name', 'position', 'working_hours', 'is_staff', 'is_active']
     list_filter = ['is_staff', 'is_active']
