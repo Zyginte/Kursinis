@@ -1,12 +1,39 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Main page</h1>
-<p>Schedule</p>
-    <h2>Employees:</h2> 
-        {% for user in users %}
+<h1>Home</h1>
+    <div>
+        <h2>My team</h2> 
         <ul>
-            <li><a href="">{{ user }}</a></li>
+            {% for user in users %}
+                <a href="#">{{ user }}</a></li>
+            {% endfor %}
         </ul>
-        {% endfor %}
-{% endblock content %}
+    </div>
+
+    <div>
+        <h2>Schedules</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Members</th>
+                    {% for day in date_range %}
+                    <th>{{ day|date:"l" }} ({{ day|date:"Y-m-d" }})</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.name }} {{ user.last_name }}</td>
+                    {% for day in date_range %}
+                    <td>
+                        <!-- Add your logic here for each user's schedule -->
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endblock content %}
