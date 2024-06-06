@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.db.models import Q
-from django.contrib.auth.models import User, AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.urls import reverse
 
 
 # Create your models here.
@@ -43,6 +44,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('1.5', '1.5 (200h/month)')
     )
     working_hours = models.CharField(max_length=4, choices=WORKING_HOURS, default='1')
+    profile_picture = models.ImageField(upload_to='profile_pictures', blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -51,6 +53,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'last_name', 'position', 'working_hours']
+
+    def get_absolute_url(self):
+        return reverse('user_profile', args=[str(self.id)])
 
     def __str__(self):
         return f'{self.name} {self.last_name}'
@@ -86,14 +91,6 @@ class Availability(models.Model):
 
     def __str__(self):
         return f'{self.user} {self.day} {self.start_time} {self.end_time})'
-
-
-
-# class Schedule(models.Model):
-#     availability = models.ForeignKey(Availability, on_delete=models.SET_NULL, null=True)
-
-    
-
 
 #python manage.py makemigrations
 #python manage.py migrate

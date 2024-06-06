@@ -2,10 +2,30 @@
 
 {% block content %}
 
-<h1>Your info:</h1>
+<h1>{{ user.name }} {{ user.last_name }}'s Profile</h1>
 
-    <li>{{ current_user }}
-    {{ current_user.name }}
-    {{ current_user.last_name }}</li>
+{% if user.profile_picture %}
+    <img src="{{ user.profile_picture.url }}" alt="Profile Picture">
+{% else %}
+    <p>No profile picture available</p>
+{% endif %}
+
+<p>Position: {{ user.position }}</p>
+<p>Email: {{ user.email }}</p>
+<p>Working Hours: {{ user.get_working_hours_display }}</p>
+
+<h2>Vacations</h2>
+<ul>
+    {% for vacation in vacations %}
+        <li>{{ vacation.get_type_display }} from {{ vacation.first_day }} to {{ vacation.last_day }}</li>
+    {% endfor %}
+</ul>
+
+<h2>Availability</h2>
+<ul>
+    {% for availability in availabilities %}
+        <li>{{ availability.day }}: {{ availability.start_time }} - {{ availability.end_time }}</li>
+    {% endfor %}
+</ul>
 
 {% endblock content %}

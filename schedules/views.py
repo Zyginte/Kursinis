@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from schedules.models import Availability, Vacation, CustomUser
 from django.utils import timezone
@@ -6,18 +6,31 @@ from datetime import timedelta, datetime
 
 # Create your views here.
 
-def home(request):
-    today = datetime.now().date()
-    start_date = today - timedelta(days=today.weekday())  # Monday
-    date_range = [start_date + timedelta(days=i) for i in range(7)]
+def home(request, week=None):
+    if week:
+        start_date = datetime.strptime(week, '%Y-%m-%d').date() # 
+    else:
+        today = datetime.now().date() #GETS THE CURRENT DATE
+        start_date = today - timedelta(days=today.weekday())  # timedelta(days=today.weekday()) SURANDA KIEK DIENU NUO PIRMADIENIO SIANDIENA YRA | today - timedelta(days=today.weekday()) IS SIANDIENOS DATOS ATIMAMA KIEK DIENU NUO PIRMADIENIO SUSKAICIAVOME IR GAUNAME PIRMADIENIO DATA
+
+    previous_week_start = start_date - timedelta(days=7) # IS PASIRINKTO PIRMADIENIO ATIMA 7 DIENAS, KAD GAUTU PRIES TAI BUVUSIO PIRMADIENIO DATA
+    next_week_start = start_date + timedelta(days=7) # PRIE PASIRINKTO PIRMADIENIO PRIDEDA 7 DIENAS, KAD GAUTU ATEINANCIO PIRMADIENIO DATA
+    
+    date_range = [start_date + timedelta(days=i) for i in range(7)] # SUKURIA SARASA DATU: PRIE PIRMADIENIO DATOS PRIDEDA ATITINKAMA SKAICIU DIENU, KURIAS GAUNAM ITERUOJANT range(7). [start_date + timedelta(days=0) for i in range(0-6)], [start_date + timedelta(days=1) for i in range(0-6)]...
     
     users = CustomUser.objects.all()
     
     data = {
         'users': users,
         'date_range': date_range,
+        'previous_week': previous_week_start.strftime('%Y-%m-%d'),  # Convert to string
+        'next_week': next_week_start.strftime('%Y-%m-%d'),  # Convert to string
     }
     return render(request, 'home.html', context=data)
+
+def user_profile(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    return render(request, 'user.html', {'user': user})
 
 
 def user_availability(request, schedule_format='week'):

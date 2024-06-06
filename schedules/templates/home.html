@@ -6,13 +6,16 @@
         <h2>My team</h2> 
         <ul>
             {% for user in users %}
-                <a href="#">{{ user }}</a></li>
+                <a href="{% url 'user_profile' user.id %}">{{ user }}</a>{{ user.position }}</li>
             {% endfor %}
         </ul>
     </div>
 
     <div>
         <h2>Schedules</h2>
+        <a href="{% url 'home_with_week' week=previous_week %}">Previous Week</a>
+        <a href="{% url 'home_with_week' week=next_week %}">Next Week</a>
+        <a href="{% url 'user_availability' %}">View Schedule</a>
         <table>
             <thead>
                 <tr>

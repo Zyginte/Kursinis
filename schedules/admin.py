@@ -12,14 +12,14 @@ class CustomUserAdmin(admin.ModelAdmin):
     list_display = ['email', 'name', 'last_name', 'position', 'working_hours', 'is_staff', 'is_active']
     list_filter = ['is_staff', 'is_active']
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password','profile_picture')}),
         ('Personal info', {'fields': ('name', 'last_name', 'position', 'working_hours')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'name', 'last_name', 'position', 'working_hours', 'password1', 'password2', 'is_staff', 'is_active')}
+            'fields': ('email', 'name', 'last_name', 'position', 'working_hours', 'profile_picture', 'password1', 'password2', 'is_staff', 'is_active')}
         ),
     )
     search_fields = ('email', 'name', 'last_name')
@@ -60,13 +60,7 @@ class AvailabilityAdmin(admin.ModelAdmin):
 
 
 
-# admin.site.register(User)
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Vacation, VacationAdmin)
 admin.site.register(Availability, AvailabilityAdmin)
-
-# class UsersAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'last_name', 'email', 'password', 'position', 'working_hours')
-#     list_filter = ('name', 'last_name', 'email', 'position', 'working_hours')
-#     search_fields = ('name', 'last_name', 'email', 'position', 'working_hours')
-#     inlines = [UsersAvailabilityInline, UsersVacationInline]
