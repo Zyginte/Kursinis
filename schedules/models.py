@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.urls import reverse
-
+from phonenumber_field.modelfields import PhoneNumberField
 
 # Create your models here.
 
@@ -44,7 +44,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ('1.5', '1.5 (200h/month)')
     )
     working_hours = models.CharField(max_length=4, choices=WORKING_HOURS, default='1')
+    phone_number = PhoneNumberField(null=True, blank=True, unique=True)
     profile_picture = models.ImageField(upload_to='profile_pictures', blank=True)
+    street_address = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -56,6 +61,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def get_absolute_url(self):
         return reverse('user_profile', args=[str(self.id)])
+    
+    def full_address(self):
+        return f"{self.street_address}, {self.city}, {self.postal_code}, {self.country}"
 
     def __str__(self):
         return f'{self.name} {self.last_name}'

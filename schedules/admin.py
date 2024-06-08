@@ -9,17 +9,17 @@ class CustomUserAdmin(admin.ModelAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ['email', 'name', 'last_name', 'position', 'working_hours', 'is_staff', 'is_active']
+    list_display = ['email', 'name', 'last_name', 'position', 'working_hours', 'phone_number', 'is_staff', 'is_active']
     list_filter = ['is_staff', 'is_active']
     fieldsets = (
         (None, {'fields': ('email', 'password','profile_picture')}),
-        ('Personal info', {'fields': ('name', 'last_name', 'position', 'working_hours')}),
+        ('Personal info', {'fields': ('name', 'last_name', 'position', 'working_hours', 'phone_number', 'street_address', 'city', 'postal_code', 'country')}),
         ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'name', 'last_name', 'position', 'working_hours', 'profile_picture', 'password1', 'password2', 'is_staff', 'is_active')}
+            'fields': ('email', 'name', 'last_name', 'position', 'working_hours', 'phone_number', 'street_address', 'city', 'state', 'postal_code', 'country', 'profile_picture', 'password1', 'password2', 'is_staff', 'is_active')}
         ),
     )
     search_fields = ('email', 'name', 'last_name')

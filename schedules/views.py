@@ -28,9 +28,15 @@ def home(request, week=None):
     }
     return render(request, 'home.html', context=data)
 
+
 def user_profile(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
-    return render(request, 'user.html', {'user': user})
+    user_vacation = Vacation.objects.filter(user=user)
+    data = {
+        'user': user,
+        'user_vacation': user_vacation,
+    }
+    return render(request, 'user.html', context=data)
 
 
 def user_availability(request, schedule_format='week'):
