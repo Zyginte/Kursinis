@@ -1,68 +1,112 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 
+<div>
+    {% if schedule_format == 'week' %}
+        <a href="{% url 'user_availability_format' 'day' %}" class="btn btn-primary">Daily Schedule</a>
+        <a href="{% url 'user_availability_format' 'month' %}" class="btn btn-primary">Monthly Schedule</a>
+    {% elif schedule_format == 'month'%}
+        <a href="{% url 'user_availability_format' 'day' %}" class="btn btn-primary">Daily Schedule</a>
+        <a href="{% url 'user_availability_format' 'week' %}" class="btn btn-primary">Weekly Schedule</a>
+    {% else %}
+        <a href="{% url 'user_availability_format' 'week' %}" class="btn btn-primary">Weekly Schedule</a>
+        <a href="{% url 'user_availability_format' 'month' %}" class="btn btn-primary">Monthly Schedule</a>
+    {% endif %}
+</div>
 
-<h3>User Availability for {{ today }}</h3>
+<div>
+    {% if schedule_format == 'week' %}
+        <h3>Employee schedule for {{ start_date }} - {{ end_date }}</h3>
+    {% elif schedule_format == 'month'%}
+        <h3>Employee schedule for {{ start_date }} - {{ end_date }}</h3>
+    {% else %}
+        <h3>Employee schedule for {{ today }}</h3>
+    {% endif %}
+</div>
 
-
-    <table>
-        <thead>
-            <tr>
-                <th>USERS</th>
-                <th></th>
+<table>
+    <thead>
+        <tr>
+            <th>USERS</th>
+            <th></th>
+            {% if schedule_format == 'week' %}
+                {% for day in date_range %}
+                    <th>{{ day|format_day }}</th>
+                {% endfor %}
+            {% elif schedule_format == 'month' %}
+                {% for day in date_range %}
+                    <th>{{ day|format_month_day }}</th>
+                {% endfor %}
+            {% else %}
                 {% for hour in hours_range %}
                     <th colspan="10">{{ hour }}:00</th>
                 {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
+            {% endif %}
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for user in users %}
             <tr>
+                <td>{{ user }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            {% if schedule_format == 'week' %}
+                {% for day in date_range %}
+                    <td>
+                        <!-- Add your logic here for each hour if needed -->
+                    </td>
+                {% endfor %}
+            {% else %}
                 {% for hour in hours_range %}
                     <td>
                         <!-- Add your logic here for each hour if needed -->
                     </td>
                 {% endfor %}
-            </tr>
-            <tr>
-                <td>
-                    {% for user in available_users %}
-                        {{ user.user.name }} {{ user.user.last_name }}:
-                        {{ user.available_from|default_if_none:"Not available" }} - {{ user.available_until|default_if_none:"Not available" }}
-                    {% endfor %}
-                </td>
-            </tr>
-        </tbody>
-    </table>
+            {% endif %}
+        </tr>
+        <tr>
+            <td>
+                {% for user in available_users %}
+                    {{ user.user.name }} {{ user.user.last_name }}:
+                    {{ available_users.user_available_days.available_from }} - {{ user.available_until }}
+                {% endfor %}
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 <br>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Not available users</th>
-            </tr>
-            <tr>
-                <th>User</th>
-                <th>On vacation from:</th>
-                <th>On vacation until:</th>
-            </tr>
-        </thead>
+<table>
+    <thead>
+        <tr>
+            <th>Not available users</th>
+        </tr>
+        <tr>
+            <th>User</th>
+            <th>On vacation from:</th>
+            <th>On vacation until:</th>
+        </tr>
+    </thead>
 
-        <tbody>
-            {% for user in not_available_users %} 
-                <tr>
-                    <td>{{ user.user.name }} {{ user.user.last_name }}</td>
-                    {% if user.on_vacation_from %}
+    <tbody>
+        {% for user in not_available_users %}
+            <tr>
+                <td>{{ user.user.name }} {{ user.user.last_name }}</td>
+                {% if user.on_vacation_from %}
                     <td>{{ user.on_vacation_from }}</td>
                     <td>{{ user.on_vacation_until }}</td>
-                    {% else %}
+                {% else %}
                     <td>N/A</td>
                     <td>N/A</td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endif %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 {% endblock content %}

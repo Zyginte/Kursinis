@@ -23,7 +23,9 @@
 
 <div>
     <h1>{{ user.name }} {{ user.last_name }}</h1>
-    <a href="#">Edit</a>
+    {% if user == request.user %}
+        <a href="{% url 'edit_profile' %}" class="btn btn-secondary btn-sm">Edit Profile</a>
+    {% endif %}
 </div>
 
 <div class="tags">

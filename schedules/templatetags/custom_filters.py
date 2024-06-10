@@ -10,3 +10,11 @@ def hours_display(value):
     if start != -1 and end != -1:
         return value[start+1:end]
     return value
+
+@register.filter(name='format_day')
+def format_day(value):
+    return value.strftime('%A')
+
+@register.filter
+def format_month_day(value):
+    return value.strftime('%b %d')

@@ -1,11 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from schedules.models import Availability, Vacation, CustomUser
 from django.utils import timezone
 from datetime import timedelta, datetime
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import CustomUserChangeForm
 
 # Create your views here.
 
+#----------------HOME----------------#
 def home(request, week=None):
     if week:
         start_date = datetime.strptime(week, '%Y-%m-%d').date() # 
@@ -28,7 +32,7 @@ def home(request, week=None):
     }
     return render(request, 'home.html', context=data)
 
-
+#----------------USER----------------#
 def user_profile(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     user_vacation = Vacation.objects.filter(user=user)
@@ -36,9 +40,25 @@ def user_profile(request, user_id):
         'user': user,
         'user_vacation': user_vacation,
     }
-    return render(request, 'user.html', context=data)
+    return render(request, 'profile.html', context=data)
 
 
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile was successfully updated!')
+            return redirect('user_profile', user_id=request.user.id)
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = CustomUserChangeForm(instance=request.user)
+    return render(request, 'edit_profile.html', {'form': form})
+
+
+#----------------AVAILABILITY----------------#
 def user_availability(request, schedule_format='week'):
     today = timezone.now().date()
 
@@ -86,33 +106,42 @@ def user_availability(request, schedule_format='week'):
                             'available_from': availability.start_time,
                             'available_until': availability.end_time,
                         })
-            elif user.id in vacation_map and vacation_map[user.id].first_day <= day <= vacation_map[user.id].last_day:
+            if user.id in vacation_map and vacation_map[user.id].first_day <= day <= vacation_map[user.id].last_day:
                 user_vacation_days.append({
                     'day': day,
                     'type': vacation_map[user.id].get_type_display(),
                 })
-        
+
         if user_available_days:
             available_users.append({
                 'user': user,
                 'available_days': user_available_days,
             })
-        elif user_vacation_days:
-            users_on_vacation.append({
-                'user': user,
-                'vacation_days': user_vacation_days,
-            })
         else:
-            not_available_users.append({
-                'user': user,
-            })
+            if user_vacation_days:
+                vacation = vacation_map[user.id]
+                not_available_users.append({
+                    'user': user,
+                    'on_vacation_from': vacation.first_day,
+                    'on_vacation_until': vacation.last_day,
+                })
+            else:
+                not_available_users.append({
+                    'user': user,
+                    'on_vacation_from': None,
+                    'on_vacation_until': None,
+                })
 
     data = {
+        'users': users,
         'available_users': available_users,
+        'today': today,
         'not_available_users': not_available_users,
-        'users_on_vacation': users_on_vacation,
+        'start_date': start_date,
+        'end_date': end_date,
         'date_range': date_range,
-        'hours_range': range(24)
+        'hours_range': range(24),
+        'schedule_format': schedule_format,
     }
 
     return render(request, 'schedule.html', context=data)

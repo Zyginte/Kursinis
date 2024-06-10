@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, user_availability, user_profile
+from .views import home, user_availability, user_profile, edit_profile
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('schedule/', user_availability, name='user_availability'),  # URL for user availability page
     path('schedule/<str:schedule_format>/', user_availability, name='user_availability_format'), #Marsrutas, puslapis in views (importuojame), pavadinimas (jei noresime kurti pvz. mygtukus, kurie nukreipia i sita puslapi)
     path('profile/<str:user_id>/', user_profile, name='user_profile'),
+    path('edit-profile/', edit_profile, name='edit_profile'),
 ]
 
 if settings.DEBUG:
