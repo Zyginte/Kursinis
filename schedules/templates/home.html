@@ -1,12 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<h1>Home</h1>
+<div class="header">
+    <h1>Connectus</h1>
+    <h1>Home</h1>
+    <h1>Klaustukas</h1>
+</div>
+
+<div class="main-content">
     <div>
+        {% if user.is_authenticated %}
+            <div class="user-info" id="color">
+                {% if user.profile_picture %}
+                    <div class="profile-picture">
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                    </div>
+                {% else %}
+                    <div class="profile-picture default">
+                        <img src="{% static 'images/default_profile_picture.png' %}" alt="Default Profile Picture">
+                    </div>
+                {% endif %}
+                <div class="user-details">
+                    <h1>{{ user.name }} {{ user.last_name }}</h1>
+                    <h3>{{ user.position }}</h3>
+                </div>
+            </div>
+        {% else %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'login'%}?next={{request.path}}">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="#">Register</a></li>
+        {% endif %}
+    </div>
+
+    <div class="team-section">
         <h2>My team</h2> 
-        <ul>
+        <ul class="team-members">
             {% for user in users %}
-                <a href="{% url 'user_profile' user.id %}">{{ user }}</a>{{ user.position }}</li>
+            {% if user != request.user %}
+            <li class="team-member">
+                {% if user.profile_picture %}
+                <div class="profile-picture">
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                </div>
+                {% else %}
+                <div class="profile-picture default">
+                    <img src="{% static 'images/default_profile_picture.png' %}" alt="Default Profile Picture">
+                </div>
+                {% endif %}
+                <div class="user-details">
+                    <h3><a href="{% url 'user_profile' user_id=user.id %}">{{ user.name }} {{ user.last_name }}</a></h3>
+                    <p>{{ user.position }}</p>
+                </div>
+            </li>
+            {% endif %}
             {% endfor %}
         </ul>
     </div>
@@ -39,4 +85,5 @@
             </tbody>
         </table>
     </div>
-    {% endblock content %}
+</div>
+{% endblock content %}

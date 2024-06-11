@@ -1,0 +1,101 @@
+body {
+    font-family: 'lato', sans-serif;
+    text-decoration: #081016;
+}
+
+h1 {
+    font-size: 40px;
+}
+h2 {
+    font-size: 30px;
+}
+h3 {
+    font-size: 22px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 12px;
+}
+h6 {
+    font-size: 8px;
+}
+
+/* ----------------HOME.html-------------- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #53A4DF;
+    position: relative;
+}
+
+/* user */
+.main-content {
+    margin: 0 100px; /* Adjust the margin values as needed */
+    background-color: white; /* Set the background color for the main content */
+}
+
+.user-info {
+    display: flex;
+    align-items: center; /* Vertically center the items */
+    background-color: #87BFE9; /* Set the background color */
+    padding: 20px; /* Add some padding for spacing */
+}
+
+.user-details {
+    margin-left: 15px; /* Adjust spacing between profile picture and user details */
+}
+
+.profile-picture img,
+.default img {
+    border-radius: 50%; /* Make the profile picture perfectly round */
+    width: 100px; /* Adjust the size of the profile picture as needed */
+    height: 100px; /* Adjust the size of the profile picture as needed */
+    object-fit: cover; /* Ensure the image covers the entire space */
+}
+
+.user-details h3 {
+    font-weight: normal; /* Make the text normal weight */
+}
+
+#color {
+    background-color: #87BFE9
+}
+
+.team-section {
+    margin-top: 20px; /* Add margin between sections */
+}
+
+.team-members {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+}
+
+.team-member {
+    width: calc(33.33% - 20px); /* Adjust the width based on the number of members per row */
+    margin: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.user-details {
+    margin-left: 10px; /* Adjust spacing between profile picture and user details */
+}
+
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.profile-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

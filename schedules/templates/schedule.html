@@ -1,19 +1,13 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 
 {% block content %}
 
-<div>
-    {% if schedule_format == 'week' %}
-        <a href="{% url 'user_availability_format' 'day' %}" class="btn btn-primary">Daily Schedule</a>
-        <a href="{% url 'user_availability_format' 'month' %}" class="btn btn-primary">Monthly Schedule</a>
-    {% elif schedule_format == 'month'%}
-        <a href="{% url 'user_availability_format' 'day' %}" class="btn btn-primary">Daily Schedule</a>
-        <a href="{% url 'user_availability_format' 'week' %}" class="btn btn-primary">Weekly Schedule</a>
-    {% else %}
-        <a href="{% url 'user_availability_format' 'week' %}" class="btn btn-primary">Weekly Schedule</a>
-        <a href="{% url 'user_availability_format' 'month' %}" class="btn btn-primary">Monthly Schedule</a>
-    {% endif %}
+<div class="schedule_format">
+    <a href="{% url 'user_availability_format' 'day' %}" class="btn btn-primary">Day</a>
+    <a href="{% url 'user_availability_format' 'week' %}" class="btn btn-primary">Week</a>
+    <a href="{% url 'user_availability_format' 'month' %}" class="btn btn-primary">Month</a>
 </div>
 
 <div>

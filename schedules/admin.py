@@ -25,6 +25,11 @@ class CustomUserAdmin(admin.ModelAdmin):
     search_fields = ('email', 'name', 'last_name')
     ordering = ('email',)
 
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.set_unusable_password()
+        obj.save()
+
 #----------VACATION
 class UsersVacationInline(admin.TabularInline):
     model = Vacation

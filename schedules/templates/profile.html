@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 
 {% block content %}
 
@@ -35,11 +36,15 @@
 
 <div>
     <h2>Holidays</h2>
-    <ul>
-        {% for vacation in user_vacation %}
-            <li>{{ vacation.get_type_display }} from {{ vacation.first_day }} to {{ vacation.last_day }}</li>
-        {% endfor %}
-    </ul>
+    {% if user_vacation %}
+        <ul>
+            {% for vacation in user_vacation %}
+                <li>{{ vacation.get_type_display }} from {{ vacation.first_day }} to {{ vacation.last_day }}</li>
+            {% endfor %}
+        </ul>
+    {% else %} 
+        <p>No vacations palnned</p>
+    {% endif %} 
 </div>
 
 <div>
