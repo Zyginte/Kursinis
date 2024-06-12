@@ -12,11 +12,15 @@
 
 <div>
     {% if schedule_format == 'week' %}
-        <h3>Employee schedule for {{ start_date }} - {{ end_date }}</h3>
-    {% elif schedule_format == 'month'%}
-        <h3>Employee schedule for {{ start_date }} - {{ end_date }}</h3>
+        <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=previous_week %}">Previous Week</a>
+        <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=next_week %}">Next Week</a>
+        <a href="#">Edit</a>
+    {% elif schedule_format == 'month' %}
+        <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=previous_month %}">Previous Month</a>
+        <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=next_month %}">Next Month</a>
     {% else %}
-        <h3>Employee schedule for {{ today }}</h3>
+        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=previous_day %}">Previous Day</a>
+        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=next_day %}">Next Day</a>
     {% endif %}
 </div>
 
@@ -27,11 +31,11 @@
             <th></th>
             {% if schedule_format == 'week' %}
                 {% for day in date_range %}
-                    <th>{{ day|format_day }}</th>
+                    <th>{{ day|format_date:schedule_format }}</th>
                 {% endfor %}
             {% elif schedule_format == 'month' %}
                 {% for day in date_range %}
-                    <th>{{ day|format_month_day }}</th>
+                    <th>{{ day|format_date:schedule_format }}</th>
                 {% endfor %}
             {% else %}
                 {% for hour in hours_range %}
@@ -102,5 +106,13 @@
         {% endfor %}
     </tbody>
 </table>
+
+<div>
+    {% if schedule_format == 'week' %}
+        {% if user.is_authenticated and user.is_staff %}
+            <button>Generate New Week</button>
+        {% endif %}
+    {% endif %}
+</div>
 
 {% endblock content %}

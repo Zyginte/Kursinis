@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CustomUserChangeForm
+import calendar
 
 # Create your views here.
 
@@ -59,24 +60,40 @@ def edit_profile(request):
 
 
 #----------------AVAILABILITY----------------#
-def user_availability(request, schedule_format='week'):
+def user_availability(request, schedule_format='week', day=None, week=None, month=None):
     today = timezone.now().date()
 
+    if week:
+        start_date = datetime.strptime(week, '%Y-%m-%d').date()
+    elif month:
+        start_date = datetime.strptime(month, '%Y-%m-%d').date().replace(day=1)
+    elif day:
+        start_date = today   
+    else:
+        start_date = today - timedelta(days=today.weekday())  # Monday
+
     if schedule_format == 'day':
-        start_date = today
         end_date = today
         date_range = [start_date]
     elif schedule_format == 'week':
-        start_date = today - timedelta(days=today.weekday())  # Monday
-        end_date = start_date + timedelta(days=6)  # Sunday
+        end_date = start_date + timedelta(days=6)
         date_range = [start_date + timedelta(days=i) for i in range(7)]
     elif schedule_format == 'month':
-        start_date = today.replace(day=1)  # First day of the month
-        next_month = start_date.month % 12 + 1
-        end_date = start_date.replace(month=next_month, day=1) - timedelta(days=1)  # Last day of the month
+        end_date = start_date.replace(day=calendar.monthrange(start_date.year, start_date.month)[1])  # Last day of the month
         date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
     else:
         return HttpResponse("Invalid schedule format", status=400)
+    
+    previous_day = start_date - timedelta(days=1)
+    next_day = start_date + timedelta(days=1)
+    previous_week_start = start_date - timedelta(days=7)
+    next_week_start = start_date + timedelta(days=7)
+    previous_month_start = (start_date - timedelta(days=start_date.day)).replace(day=1)
+    next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
+    print(previous_day)
+    print(next_day)
+    print(previous_week_start)
+    print(next_week_start)
 
     users = CustomUser.objects.all()
     availabilities = Availability.objects.filter(day__range=[start_date, end_date])
@@ -142,6 +159,12 @@ def user_availability(request, schedule_format='week'):
         'date_range': date_range,
         'hours_range': range(24),
         'schedule_format': schedule_format,
+        'previous_day': previous_day,
+        'next_day': next_day,
+        'previous_week': previous_week_start.strftime('%Y-%m-%d'),
+        'next_week': next_week_start.strftime('%Y-%m-%d'),
+        'previous_month': previous_month_start.strftime('%Y-%m-%d'),
+        'next_month': next_month_start.strftime('%Y-%m-%d'),
     }
 
     return render(request, 'schedule.html', context=data)
