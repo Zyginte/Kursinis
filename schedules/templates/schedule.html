@@ -49,7 +49,6 @@
     <thead>
         <tr>
             <th>USERS</th>
-            <th></th>
             {% if schedule_format == 'week' %}
                 {% for day in date_range %}
                     <th>{{ day|format_date:schedule_format }}</th>
@@ -87,16 +86,19 @@
                 {% endfor %}
             {% endif %}
         </tr>
-        <tr>
-            <td>
-                {% for user in available_users %}
-                    {{ user.user.name }} {{ user.user.last_name }}:
-                    {{ available_users.user_available_days.available_from }} - {{ user.available_until }}
-                {% endfor %}
-            </td>
-        </tr>
     </tbody>
 </table>
+
+<div>
+    {% if user.is_authenticated and user.is_superuser %}
+        <form method="post" action="{% url 'generate_weekly_schedule' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Generate New Week</button>
+        </form>
+    {% else %}
+        <p>Only store managers can generate the schedule.</p>
+    {% endif %}
+</div>
 
 <br>
 
@@ -130,8 +132,11 @@
 
 <div>
     {% if schedule_format == 'week' %}
-        {% if user.is_authenticated and user.is_staff %}
-            <button>Generate New Week</button>
+        {% if user.is_authenticated and user.is_superuser %}
+            <form method="post" action="{% url 'generate_weekly_schedule' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Generate New Week</button>
+            </form>
         {% endif %}
     {% endif %}
 </div>

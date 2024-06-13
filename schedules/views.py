@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from schedules.models import Availability, Vacation, CustomUser
 from django.utils import timezone
 from datetime import timedelta, datetime
@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 import calendar
+import logging
 
 # Create your views here.
 
@@ -51,32 +52,50 @@ def user_profile(request, user_id):
     }
     return render(request, 'profile.html', context=data)
 
+logger = logging.getLogger(__name__)
 
 @login_required
 def edit_profile(request):
+    logger.debug(f"Initial user: {request.user}")
+
     if request.method == 'POST':
-        if 'create_member' in request.POST:  # Check if the 'create_member' button was clicked
-            form = CustomUserCreationForm(request.POST, request.FILES)
-        else:
-            form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
-        
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            user = form.save()
-            if 'create_member' in request.POST:
-                messages.success(request, 'New team member added successfully!')
-            else:
-                messages.success(request, 'Your profile was successfully updated!')
-            return redirect('user_profile', user_id=request.user.id)  # Redirect to the current user's profile
+            form.save()
+            messages.success(request, 'Your profile was successfully updated!')
+            logger.debug(f"Profile updated for user: {request.user}")
+            return redirect('user_profile', user_id=request.user.id)
         else:
             messages.error(request, 'Please correct the error below.')
+            logger.debug(f"Form errors: {form.errors}")
+
     else:
-        if 'create_member' in request.GET:  # Check if 'create_member' parameter is in GET request
-            form = CustomUserCreationForm()
-        else:
-            form = CustomUserChangeForm(instance=request.user)
-    
+        form = CustomUserChangeForm(instance=request.user)
+
+    logger.debug(f"Rendering edit_profile with form: {form}")
     return render(request, 'edit_profile.html', {'form': form})
 
+@login_required
+def create_member(request):
+    logger.debug(f"User creating new member: {request.user}")
+
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_user = form.save(commit=False)
+            new_user.set_password(form.cleaned_data["password1"])
+            new_user.save()
+            messages.success(request, 'New team member added.')
+            logger.debug(f"New team member created: {new_user}")
+            return redirect('user_profile', user_id=request.user.id)
+        else:
+            messages.error(request, 'Please correct the error below.')
+            logger.debug(f"Form errors: {form.errors}")
+    else:
+        form = CustomUserCreationForm()
+
+    logger.debug(f"Rendering create_member with form: {form}")
+    return render(request, 'create_member.html', {'form': form})
 
 #----------------AVAILABILITY----------------#
 def user_availability(request, schedule_format='week', day=None, week=None, month=None):
@@ -112,8 +131,6 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
 
     previous_month_start = (start_date - timedelta(days=start_date.day)).replace(day=1)
     next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
-    print(previous_day)
-    print(next_day)
 
     users = CustomUser.objects.all()
     availabilities = Availability.objects.filter(day__range=[start_date, end_date])
@@ -188,3 +205,9 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     }
 
     return render(request, 'schedule.html', context=data)
+
+def generate_weekly_schedule(request):
+    if request.method == 'POST' and request.user.is_superuser:
+        generate_schedule()
+        return redirect('user_availability_format', schedule_format='week')
+    return redirect('user_availability_format', schedule_format='week')

@@ -17,7 +17,18 @@ class CustomUserCreationForm(UserCreationForm):
     
     class Meta:
         model = CustomUser
-        fields = ('email', 'password1', 'password2', 'name', 'last_name', 'position', 'working_hours', 'phone_number', 'profile_picture', 'street_address', 'city', 'postal_code', 'country')
+        fields = (
+            'email', 'password1', 'password2', 'name', 'last_name', 'position',
+            'working_hours', 'phone_number', 'profile_picture', 'street_address',
+            'city', 'postal_code', 'country'
+        )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:

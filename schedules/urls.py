@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, user_availability, user_profile, edit_profile
+from .views import home, user_availability, user_profile, edit_profile,create_member, generate_weekly_schedule
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -14,6 +14,8 @@ urlpatterns = [
     path('schedule/<str:schedule_format>/<str:day>/', user_availability, name='user_availability_format_with_day'),
     path('profile/<str:user_id>/', user_profile, name='user_profile'),
     path('edit-profile/', edit_profile, name='edit_profile'),
+    path('create-member/', create_member, name='create_member'),
+    path('generate-weekly-schedule/', generate_weekly_schedule, name='generate_weekly_schedule'),
 ]
 
 if settings.DEBUG:

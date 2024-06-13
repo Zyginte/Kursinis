@@ -35,7 +35,7 @@
 
     <div class="team-section">
         <h2>My team</h2>
-        <a href="{% url 'edit_profile' %}?create_member=true" class="btn btn-primary">Add a member</a>
+        <a href="{% url 'create_member' %}">Add A Member</a>
         <ul class="team-members">
             {% for user in users %}
                 {% if user != request.user %}
