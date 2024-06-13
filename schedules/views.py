@@ -8,6 +8,7 @@ from django.contrib import messages
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 import calendar
 import logging
+from .utils import generate_schedule
 
 # Create your views here.
 
@@ -211,3 +212,45 @@ def generate_weekly_schedule(request):
         generate_schedule()
         return redirect('user_availability_format', schedule_format='week')
     return redirect('user_availability_format', schedule_format='week')
+
+# def user_availability(request, schedule_format='week', day=None, week=None, month=None):
+#     users = CustomUser.objects.all()
+
+#     # Determine the date range based on the format
+#     if schedule_format == 'week':
+#         if week:
+#             start_date = week
+#         else:
+#             start_date = timezone.now().date()
+#         end_date = start_date + timezone.timedelta(days=6)
+#         date_range = [start_date + timezone.timedelta(days=i) for i in range(7)]
+#     elif schedule_format == 'month':
+#         if month:
+#             start_date = month
+#         else:
+#             start_date = timezone.now().date().replace(day=1)
+#         end_date = (start_date + timezone.timedelta(days=31)).replace(day=1) - timezone.timedelta(days=1)
+#         date_range = [start_date + timezone.timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+#     else:  # day format
+#         if day:
+#             start_date = day
+#         else:
+#             start_date = timezone.now().date()
+#         end_date = start_date
+#         date_range = [start_date]
+#         hours_range = list(range(24))
+
+#     # Add your schedule logic here
+#     for user in users:
+#         user.schedule = {}  # Replace with actual schedule fetching logic
+
+#     context = {
+#         'schedule_format': schedule_format,
+#         'date_range': date_range,
+#         'hours_range': hours_range if schedule_format == 'day' else None,
+#         'start_date': start_date,
+#         'end_date': end_date,
+#         'users': users,
+#     }
+
+#     return render(request, 'schedule.html', context)
