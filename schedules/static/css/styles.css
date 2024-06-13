@@ -99,3 +99,31 @@ h6 {
     height: 100%;
     object-fit: cover;
 }
+
+/* ----------------SCHEDULE.html-------------- */
+.day-navigation {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px auto;  /* Center the button horizontally */
+    border: 1.5px solid #53A4DF;  /* Thinner blue outline */
+    border-radius: 25px;  /* Rounded corners */
+}
+
+.nav-arrow {
+    display: inline-block;
+    padding: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    border-radius: 25px;
+    position: relative; /* Position relative for absolute positioning of arrows */
+}
+
+.nav-arrow:hover {
+    background-color: #e5ecf8;  /* Slightly darker blue on hover */
+}
+
+.nav-date {
+    display: inline-block;
+    padding: 10px 20px;
+}

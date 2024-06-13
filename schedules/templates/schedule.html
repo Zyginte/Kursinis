@@ -12,15 +12,36 @@
 
 <div>
     {% if schedule_format == 'week' %}
-        <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=previous_week %}">Previous Week</a>
-        <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=next_week %}">Next Week</a>
+        <div class="day-navigation">
+            <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=previous_week %}" class="nav-arrow">
+                &larr;
+            </a>
+            <span class="nav-date">{{ start_date|date:"F j" }} - {{ end_date|date:"F j, Y" }}</span>
+            <a href="{% url 'user_availability_format_with_week' schedule_format='week' week=next_week %}" class="nav-arrow">
+                &rarr;
+            </a>
+        </div>
         <a href="#">Edit</a>
     {% elif schedule_format == 'month' %}
-        <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=previous_month %}">Previous Month</a>
-        <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=next_month %}">Next Month</a>
+        <div class="day-navigation">
+            <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=previous_month %}" class="nav-arrow">
+                &larr;
+            </a>
+            <span class="nav-date">{{ start_date|date:"F, Y" }}</span>
+            <a href="{% url 'user_availability_format_with_month' schedule_format='month' month=next_month %}" class="nav-arrow">
+                &rarr;
+            </a>
+        </div>
     {% else %}
-        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=previous_day %}">Previous Day</a>
-        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=next_day %}">Next Day</a>
+    <div class="day-navigation">
+        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=previous_day %}" class="nav-arrow">
+            &larr;
+        </a>
+        <span class="nav-date">{{ start_date|date:"l, F j" }}</span>
+        <a href="{% url 'user_availability_format_with_day' schedule_format='day' day=next_day %}" class="nav-arrow">
+            &rarr;
+        </a>
+    </div>
     {% endif %}
 </div>
 

@@ -5,6 +5,13 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Save changes</button>
+    <button type="submit" class="btn btn-primary">
+        {% if form.instance.pk %}
+            Save Changes
+        {% else %}
+            Create Member
+        {% endif %}
+    </button>
+    <a href="{% url 'edit_profile' %}" class="btn btn-secondary">Cancel</a>
 </form>
 {% endblock %}

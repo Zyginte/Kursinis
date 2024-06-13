@@ -5,7 +5,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import CustomUserChangeForm
+from .forms import CustomUserChangeForm, CustomUserCreationForm
 import calendar
 
 # Create your views here.
@@ -18,6 +18,8 @@ def home(request, week=None):
         today = datetime.now().date() #GETS THE CURRENT DATE
         start_date = today - timedelta(days=today.weekday())  # timedelta(days=today.weekday()) SURANDA KIEK DIENU NUO PIRMADIENIO SIANDIENA YRA | today - timedelta(days=today.weekday()) IS SIANDIENOS DATOS ATIMAMA KIEK DIENU NUO PIRMADIENIO SUSKAICIAVOME IR GAUNAME PIRMADIENIO DATA
 
+    end_date = start_date + timedelta(days=6)
+
     previous_week_start = start_date - timedelta(days=7) # IS PASIRINKTO PIRMADIENIO ATIMA 7 DIENAS, KAD GAUTU PRIES TAI BUVUSIO PIRMADIENIO DATA
     next_week_start = start_date + timedelta(days=7) # PRIE PASIRINKTO PIRMADIENIO PRIDEDA 7 DIENAS, KAD GAUTU ATEINANCIO PIRMADIENIO DATA
     
@@ -28,9 +30,15 @@ def home(request, week=None):
     data = {
         'users': users,
         'date_range': date_range,
+        'start_date': start_date,
+        'end_date': end_date,
         'previous_week': previous_week_start.strftime('%Y-%m-%d'),  # Convert to string
         'next_week': next_week_start.strftime('%Y-%m-%d'),  # Convert to string
     }
+
+    if 'create_member' in request.GET:
+        data['create_member'] = True
+
     return render(request, 'home.html', context=data)
 
 #----------------USER----------------#
@@ -47,15 +55,26 @@ def user_profile(request, user_id):
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        if 'create_member' in request.POST:  # Check if the 'create_member' button was clicked
+            form = CustomUserCreationForm(request.POST, request.FILES)
+        else:
+            form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Your profile was successfully updated!')
-            return redirect('user_profile', user_id=request.user.id)
+            user = form.save()
+            if 'create_member' in request.POST:
+                messages.success(request, 'New team member added successfully!')
+            else:
+                messages.success(request, 'Your profile was successfully updated!')
+            return redirect('user_profile', user_id=request.user.id)  # Redirect to the current user's profile
         else:
             messages.error(request, 'Please correct the error below.')
     else:
-        form = CustomUserChangeForm(instance=request.user)
+        if 'create_member' in request.GET:  # Check if 'create_member' parameter is in GET request
+            form = CustomUserCreationForm()
+        else:
+            form = CustomUserChangeForm(instance=request.user)
+    
     return render(request, 'edit_profile.html', {'form': form})
 
 
@@ -68,11 +87,12 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     elif month:
         start_date = datetime.strptime(month, '%Y-%m-%d').date().replace(day=1)
     elif day:
-        start_date = today   
+        start_date = datetime.strptime(day, '%Y-%m-%d').date()   
     else:
         start_date = today - timedelta(days=today.weekday())  # Monday
 
     if schedule_format == 'day':
+        start_date = start_date
         end_date = today
         date_range = [start_date]
     elif schedule_format == 'week':
@@ -86,14 +106,14 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     
     previous_day = start_date - timedelta(days=1)
     next_day = start_date + timedelta(days=1)
+
     previous_week_start = start_date - timedelta(days=7)
     next_week_start = start_date + timedelta(days=7)
+
     previous_month_start = (start_date - timedelta(days=start_date.day)).replace(day=1)
     next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
     print(previous_day)
     print(next_day)
-    print(previous_week_start)
-    print(next_week_start)
 
     users = CustomUser.objects.all()
     availabilities = Availability.objects.filter(day__range=[start_date, end_date])
