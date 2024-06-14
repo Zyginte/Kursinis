@@ -8,7 +8,7 @@ from django.contrib import messages
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 import calendar
 import logging
-from .utils import generate_schedule
+from .utils import generate_schedule, get_schedule_for_day, get_schedule_for_month
 
 # Create your views here.
 
@@ -107,29 +107,26 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     elif month:
         start_date = datetime.strptime(month, '%Y-%m-%d').date().replace(day=1)
     elif day:
-        start_date = datetime.strptime(day, '%Y-%m-%d').date()   
+        start_date = datetime.strptime(day, '%Y-%m-%d').date()
     else:
         start_date = today - timedelta(days=today.weekday())  # Monday
 
     if schedule_format == 'day':
-        start_date = start_date
-        end_date = today
+        end_date = start_date
         date_range = [start_date]
     elif schedule_format == 'week':
         end_date = start_date + timedelta(days=6)
         date_range = [start_date + timedelta(days=i) for i in range(7)]
     elif schedule_format == 'month':
-        end_date = start_date.replace(day=calendar.monthrange(start_date.year, start_date.month)[1])  # Last day of the month
+        end_date = start_date.replace(day=calendar.monthrange(start_date.year, start_date.month)[1])
         date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
     else:
         return HttpResponse("Invalid schedule format", status=400)
-    
+
     previous_day = start_date - timedelta(days=1)
     next_day = start_date + timedelta(days=1)
-
     previous_week_start = start_date - timedelta(days=7)
     next_week_start = start_date + timedelta(days=7)
-
     previous_month_start = (start_date - timedelta(days=start_date.day)).replace(day=1)
     next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
 
@@ -145,35 +142,24 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
             availability_map[availability.user_id] = []
         availability_map[availability.user_id].append(availability)
 
-    users_on_vacation = []
     available_users = []
     not_available_users = []
 
     for user in users:
-        user_available_days = []
-        user_vacation_days = []
+        user_schedule = {}
         for day in date_range:
-            if user.id in availability_map:
-                for availability in availability_map[user.id]:
-                    if availability.day == day:
-                        user_available_days.append({
-                            'day': day,
-                            'available_from': availability.start_time,
-                            'available_until': availability.end_time,
-                        })
-            if user.id in vacation_map and vacation_map[user.id].first_day <= day <= vacation_map[user.id].last_day:
-                user_vacation_days.append({
-                    'day': day,
-                    'type': vacation_map[user.id].get_type_display(),
-                })
+            if schedule_format == 'day' or schedule_format == 'week':
+                user_schedule[day] = get_schedule_for_day(user, day)
+            elif schedule_format == 'month':
+                user_schedule.update(get_schedule_for_month(user, start_date))
 
-        if user_available_days:
+        if user_schedule:
             available_users.append({
                 'user': user,
-                'available_days': user_available_days,
+                'schedule': user_schedule,
             })
         else:
-            if user_vacation_days:
+            if user.id in vacation_map:
                 vacation = vacation_map[user.id]
                 not_available_users.append({
                     'user': user,

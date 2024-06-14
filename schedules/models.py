@@ -88,8 +88,9 @@ class Vacation(models.Model):
 
 #----------AVAILABILITY----------#
 class Availability(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     day = models.DateField('Day', null=False)
+    is_available = models.BooleanField(default=True)
     start_time = models.TimeField('Available from', null=True, blank=True)
     end_time = models.TimeField('Available to', null=True, blank=True)
 
@@ -98,7 +99,7 @@ class Availability(models.Model):
         verbose_name_plural = 'Availabilities'
 
     def __str__(self):
-        return f'{self.user} {self.day} {self.start_time} {self.end_time})'
+        return f'{self.user} {self.day} {self.start_time} {self.end_time} {"Available" if self.is_available else "Not Available"}'
 
 #python manage.py makemigrations
 #python manage.py migrate
