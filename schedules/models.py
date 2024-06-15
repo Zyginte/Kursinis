@@ -99,7 +99,20 @@ class Availability(models.Model):
         verbose_name_plural = 'Availabilities'
 
     def __str__(self):
-        return f'{self.user} {self.day} {self.start_time} {self.end_time} {"Available" if self.is_available else "Not Available"}'
+        availability_status = "Available" if self.is_available else "Not Available"
+        return f'{self.user} - {self.day} ({availability_status})'
+
+class AvailableTime(models.Model):
+    availability = models.ForeignKey(Availability, related_name='available_times', on_delete=models.CASCADE)
+    start_time = models.TimeField('Available from', null=True, blank=True)
+    end_time = models.TimeField('Available to', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Available Time'
+        verbose_name_plural = 'Available Times'
+
+    def __str__(self):
+        return f'{self.availability.user} - {self.availability.day} - {self.start_time} to {self.end_time}'
 
 #python manage.py makemigrations
 #python manage.py migrate

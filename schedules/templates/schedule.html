@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load schedule_filters %}
 {% load static %}
 
 {% block content %}
@@ -67,22 +68,16 @@
 
     <tbody>
         {% for user in available_users %}
-            <tr>
-                <td>{{ user.name }}</td>
-                {% if schedule_format == 'week' %}
-                    {% for day in date_range %}
-                        <td>{{ user.schedule|get_schedule_for_day:day }}</td>
+        <tr>
+            <td>{{ user.user.name }}</td>
+            {% for day in date_range %}
+                <td>
+                    {% for available_time in user.schedule|dict_get:day %}
+                        {{ available_time.start_time }} - {{ available_time.end_time }}<br>
                     {% endfor %}
-                {% elif schedule_format == 'month' %}
-                    {% for day in date_range %}
-                        <td>{{ user.schedule|get_schedule_for_day:day }}</td>
-                    {% endfor %}
-                {% else %}
-                    {% for hour in hours_range %}
-                        <td colspan="10">{{ user.schedule|get_schedule_for_hour:hour }}</td>
-                    {% endfor %}
-                {% endif %}
-            </tr>
+                </td>
+            {% endfor %}
+        </tr>
         {% endfor %}
 
         {% for user in not_available_users %}

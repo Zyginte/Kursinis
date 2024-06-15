@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, HttpResponseForbidden
-from schedules.models import Availability, Vacation, CustomUser
+from schedules.models import Availability,AvailableTime, Vacation, CustomUser
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required
@@ -132,6 +132,7 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
 
     users = CustomUser.objects.all()
     availabilities = Availability.objects.filter(day__range=[start_date, end_date])
+    available_times = AvailableTime.objects.filter(availability__day__range=[start_date, end_date])
     user_vacations = Vacation.objects.filter(first_day__lte=end_date, last_day__gte=start_date)
 
     vacation_map = {vacation.user_id: vacation for vacation in user_vacations}
@@ -142,6 +143,16 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
             availability_map[availability.user_id] = []
         availability_map[availability.user_id].append(availability)
 
+    available_times_map = {}
+    for available_time in available_times:
+        user_id = available_time.availability.user_id
+        day = available_time.availability.day
+        if user_id not in available_times_map:
+            available_times_map[user_id] = {}
+        if day not in available_times_map[user_id]:
+            available_times_map[user_id][day] = []
+        available_times_map[user_id][day].append(available_time)
+
     available_users = []
     not_available_users = []
 
@@ -149,9 +160,9 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
         user_schedule = {}
         for day in date_range:
             if schedule_format == 'day' or schedule_format == 'week':
-                user_schedule[day] = get_schedule_for_day(user, day)
+                user_schedule[day] = available_times_map.get(user.id, {}).get(day, [])
             elif schedule_format == 'month':
-                user_schedule.update(get_schedule_for_month(user, start_date))
+                user_schedule.update({d: available_times_map.get(user.id, {}).get(d, []) for d in date_range})
 
         if user_schedule:
             available_users.append({
@@ -198,45 +209,3 @@ def generate_weekly_schedule(request):
         generate_schedule()
         return redirect('user_availability_format', schedule_format='week')
     return redirect('user_availability_format', schedule_format='week')
-
-# def user_availability(request, schedule_format='week', day=None, week=None, month=None):
-#     users = CustomUser.objects.all()
-
-#     # Determine the date range based on the format
-#     if schedule_format == 'week':
-#         if week:
-#             start_date = week
-#         else:
-#             start_date = timezone.now().date()
-#         end_date = start_date + timezone.timedelta(days=6)
-#         date_range = [start_date + timezone.timedelta(days=i) for i in range(7)]
-#     elif schedule_format == 'month':
-#         if month:
-#             start_date = month
-#         else:
-#             start_date = timezone.now().date().replace(day=1)
-#         end_date = (start_date + timezone.timedelta(days=31)).replace(day=1) - timezone.timedelta(days=1)
-#         date_range = [start_date + timezone.timedelta(days=i) for i in range((end_date - start_date).days + 1)]
-#     else:  # day format
-#         if day:
-#             start_date = day
-#         else:
-#             start_date = timezone.now().date()
-#         end_date = start_date
-#         date_range = [start_date]
-#         hours_range = list(range(24))
-
-#     # Add your schedule logic here
-#     for user in users:
-#         user.schedule = {}  # Replace with actual schedule fetching logic
-
-#     context = {
-#         'schedule_format': schedule_format,
-#         'date_range': date_range,
-#         'hours_range': hours_range if schedule_format == 'day' else None,
-#         'start_date': start_date,
-#         'end_date': end_date,
-#         'users': users,
-#     }
-
-#     return render(request, 'schedule.html', context)

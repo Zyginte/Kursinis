@@ -19,3 +19,7 @@ def format_date(value, schedule_format):
         return value.strftime('%b %d')  # Format for month view (Jun 10)
     else:
         return value.strftime('%H:%M')  # Default format for other views (12:00)
+    
+@register.filter
+def dict_get(value, arg):
+    return value.get(arg, [])
