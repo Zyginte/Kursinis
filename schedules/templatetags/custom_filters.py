@@ -1,4 +1,5 @@
 from django import template
+from ..models import CustomUser
 
 register = template.Library()
 
@@ -23,3 +24,11 @@ def format_date(value, schedule_format):
 @register.filter
 def dict_get(value, arg):
     return value.get(arg, [])
+
+@register.filter
+def get_user_by_id(user_id):
+    return CustomUser.objects.get(id=user_id)
+
+@register.filter(name='get_item')
+def get_item(dictionary, key):
+    return dictionary.get(key)

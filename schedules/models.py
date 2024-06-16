@@ -90,7 +90,7 @@ class Vacation(models.Model):
 class Availability(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     day = models.DateField('Day', null=False)
-    is_available = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True) #NEED TO REMOVE
     start_time = models.TimeField('Available from', null=True, blank=True)
     end_time = models.TimeField('Available to', null=True, blank=True)
 
@@ -99,10 +99,10 @@ class Availability(models.Model):
         verbose_name_plural = 'Availabilities'
 
     def __str__(self):
-        availability_status = "Available" if self.is_available else "Not Available"
+        availability_status = "Available" if self.is_available else "Not Available" #NEED TO REMOVE
         return f'{self.user} - {self.day} ({availability_status})'
 
-class AvailableTime(models.Model):
+class AvailableTime(models.Model): #NEED TO MERGE WITH AVAILABILITY
     availability = models.ForeignKey(Availability, related_name='available_times', on_delete=models.CASCADE)
     start_time = models.TimeField('Available from', null=True, blank=True)
     end_time = models.TimeField('Available to', null=True, blank=True)

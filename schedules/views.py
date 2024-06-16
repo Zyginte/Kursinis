@@ -11,6 +11,7 @@ import logging
 from .utils import generate_schedule, get_schedule_for_day, get_schedule_for_month
 
 # Create your views here.
+logger = logging.getLogger(__name__)
 
 #----------------HOME----------------#
 def home(request, week=None):
@@ -53,8 +54,6 @@ def user_profile(request, user_id):
     }
     return render(request, 'profile.html', context=data)
 
-logger = logging.getLogger(__name__)
-
 @login_required
 def edit_profile(request):
     logger.debug(f"Initial user: {request.user}")
@@ -88,7 +87,7 @@ def create_member(request):
             new_user.save()
             messages.success(request, 'New team member added.')
             logger.debug(f"New team member created: {new_user}")
-            return redirect('user_profile', user_id=request.user.id)
+            return redirect('user_profile', user_id=request.new_user.id)
         else:
             messages.error(request, 'Please correct the error below.')
             logger.debug(f"Form errors: {form.errors}")
@@ -98,7 +97,7 @@ def create_member(request):
     logger.debug(f"Rendering create_member with form: {form}")
     return render(request, 'create_member.html', {'form': form})
 
-#----------------AVAILABILITY----------------#
+#----------------AVAILABILITY + SCHEDULE----------------#
 def user_availability(request, schedule_format='week', day=None, week=None, month=None):
     today = timezone.now().date()
 
@@ -109,7 +108,7 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     elif day:
         start_date = datetime.strptime(day, '%Y-%m-%d').date()
     else:
-        start_date = today - timedelta(days=today.weekday())  # Monday
+        start_date = today - timedelta(days=today.weekday())
 
     if schedule_format == 'day':
         end_date = start_date
@@ -131,17 +130,17 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
 
     users = CustomUser.objects.all()
-    availabilities = Availability.objects.filter(day__range=[start_date, end_date])
+    available_dates = Availability.objects.filter(day__range=[start_date, end_date])
     available_times = AvailableTime.objects.filter(availability__day__range=[start_date, end_date])
     user_vacations = Vacation.objects.filter(first_day__lte=end_date, last_day__gte=start_date)
 
     vacation_map = {vacation.user_id: vacation for vacation in user_vacations}
 
-    availability_map = {}
-    for availability in availabilities:
-        if availability.user_id not in availability_map:
-            availability_map[availability.user_id] = []
-        availability_map[availability.user_id].append(availability)
+    available_dates_map = {}
+    for availability in available_dates:
+        if availability.user_id not in available_dates_map:
+            available_dates_map[availability.user_id] = []
+        available_dates_map[availability.user_id].append(availability)
 
     available_times_map = {}
     for available_time in available_times:
@@ -184,6 +183,27 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
                     'on_vacation_until': None,
                 })
 
+    generated_schedule = generate_schedule(week=week)
+    schedule_data = []
+
+    for user_id, schedule in generated_schedule.items():
+        user = users.get(id=user_id)
+        if schedule_format == 'week' and schedule:
+            schedule_row = {'user': user, 'schedule': []}
+            for day in date_range:
+                day_schedule = ""
+                for current_date, work_hours in schedule.items():
+                    # print(f"current_hour: {current_date} work_hours: {work_hours}")
+                    # print(f"Checking: current_hour.date()={current_date}, day={day}")
+                    if current_date == day:
+                        day_schedule += f"{work_hours}<br>"
+                        # print(f"Matched: {current_date} with {work_hours}")
+                if not day_schedule:
+                    day_schedule = "No schedule available"
+                    # print(f"No schedule for day: {day}")
+                schedule_row['schedule'].append(day_schedule)
+            schedule_data.append(schedule_row)
+
     data = {
         'users': users,
         'available_users': available_users,
@@ -200,6 +220,8 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
         'next_week': next_week_start.strftime('%Y-%m-%d'),
         'previous_month': previous_month_start.strftime('%Y-%m-%d'),
         'next_month': next_month_start.strftime('%Y-%m-%d'),
+        'generated_schedule': generated_schedule,
+        'schedule_data': schedule_data,
     }
 
     return render(request, 'schedule.html', context=data)
