@@ -9,13 +9,12 @@ logger = logging.getLogger(__name__)
 
 def generate_schedule(week=None):
     users = CustomUser.objects.all()
-    start_date = timezone.now().date()
+    start_date = timezone.now()
 
     if week:
-        start_date = datetime.strptime(week, '%Y-%m-%d').date()
+        start_date = datetime.strptime(week, '%Y-%m-%d')
 
     end_date = start_date + timedelta(days=6)
-    schedule_by_hour = {}
     user_scheduled_hours = {}
 
     for user in users:
@@ -24,40 +23,39 @@ def generate_schedule(week=None):
         monthly_working_hours_limit = float(user.working_hours) * 160
 
         for day in range(7):
-            date = start_date + timedelta(days=day)
-            availability = Availability.objects.filter(user=user, day=date).first()
+            current_date = start_date + timedelta(days=day)
+            current_date_key = current_date.date()
+            availability = Availability.objects.filter(user=user, day=current_date_key).first()
+
+            logger.debug(f"User: {user}, Date: {current_date}, Availability: {availability}")
 
             if availability and availability.start_time and availability.end_time:
-                start_time = datetime.combine(date, availability.start_time)
-                end_time = datetime.combine(date, availability.end_time)
-                work_hours = f"{start_time.strftime('%I %p').lstrip('0').replace(' 0', ' ')} - {end_time.strftime('%I %p').lstrip('0').replace(' 0', ' ')}"
+                start_time = datetime.combine(current_date_key, availability.start_time)
+                end_time = datetime.combine(current_date_key, availability.end_time)
                 total_available_hours = (end_time - start_time).total_seconds() / 3600
+
+                if current_date_key not in user.schedule:
+                    user.schedule[current_date_key] = []
 
                 for hour in range(int(total_available_hours)):
                     current_hour = start_time + timedelta(hours=hour)
 
                     if user_scheduled_hours.get(user.id, None):
                         last_scheduled_hour = user_scheduled_hours[user.id][-1]
-                        if current_hour - last_scheduled_hour > timedelta(hours=1):
+                        if current_hour - last_scheduled_hour < timedelta(hours=1):
                             continue
 
-                    if schedule_by_hour.get(current_hour, 0) < 4:
-                        if current_hour.date() not in user.schedule:
-                            user.schedule[current_hour.date()] = work_hours
-                            print(user.schedule)
-                            schedule_by_hour[current_hour] = schedule_by_hour.get(current_hour, 0) + 1
-                            total_scheduled_hours += 1
-                            user_scheduled_hours.setdefault(user.id, []).append(current_hour)
+                    if len(user.schedule[current_date_key]) < 4:
+                        work_hours = f"{current_hour.strftime('%I %p').lstrip('0').replace(' 0', ' ')} - {end_time.strftime('%I %p').lstrip('0').replace(' 0', ' ')}"
+                        user.schedule[current_date_key].append(work_hours)
+                        total_scheduled_hours += 1
+                        user_scheduled_hours.setdefault(user.id, []).append(current_hour)
 
-                            if total_scheduled_hours > monthly_working_hours_limit:
-                                excess_hours = total_scheduled_hours - monthly_working_hours_limit
-                                excess_hour_time = start_time + timedelta(hours=hour - excess_hours)
-                                user.schedule.pop(excess_hour_time.date(), None)
-                                total_scheduled_hours -= 1
-            else:
-                user.schedule[date] = ""
-
-        user.save()
+                        if total_scheduled_hours > monthly_working_hours_limit:
+                            excess_hours = total_scheduled_hours - monthly_working_hours_limit
+                            excess_hour_time = start_time + timedelta(hours=hour - excess_hours)
+                            user.schedule[current_date_key].pop()
+                            total_scheduled_hours -= 1
 
     return {user.id: user.schedule for user in users}
 

@@ -99,7 +99,7 @@ class Availability(models.Model):
         verbose_name_plural = 'Availabilities'
 
     def __str__(self):
-        availability_status = "Available" if self.is_available else "Not Available" #NEED TO REMOVE
+        availability_status = "Available" if self.is_available else "Not Available" 
         return f'{self.user} - {self.day} ({availability_status})'
 
 class AvailableTime(models.Model): #NEED TO MERGE WITH AVAILABILITY

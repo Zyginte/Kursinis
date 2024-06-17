@@ -23,9 +23,18 @@ class CustomUserCreationForm(UserCreationForm):
             'city', 'postal_code', 'country'
         )
 
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data.get('phone_number')
+        if phone_number:
+            if CustomUser.objects.filter(phone_number=phone_number).exists():
+                raise forms.ValidationError("A user with this phone number already exists.")
+        return phone_number
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
+        if not user.phone_number:
+            user.phone_number = None
         if commit:
             user.save()
         return user

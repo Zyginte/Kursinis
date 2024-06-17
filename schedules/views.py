@@ -87,9 +87,13 @@ def create_member(request):
             new_user.save()
             messages.success(request, 'New team member added.')
             logger.debug(f"New team member created: {new_user}")
-            return redirect('user_profile', user_id=request.new_user.id)
+            return redirect('user_profile', user_id=new_user.id)
         else:
-            messages.error(request, 'Please correct the error below.')
+            # Capture form errors and log them
+            for field, errors in form.errors.items():
+                for error in errors:
+                    logger.error(f"Error in {field}: {error}")
+            messages.error(request, 'Please correct the error(s) below.')
             logger.debug(f"Form errors: {form.errors}")
     else:
         form = CustomUserCreationForm()
@@ -99,14 +103,14 @@ def create_member(request):
 
 #----------------AVAILABILITY + SCHEDULE----------------#
 def user_availability(request, schedule_format='week', day=None, week=None, month=None):
-    today = timezone.now().date()
+    today = timezone.now()
 
     if week:
-        start_date = datetime.strptime(week, '%Y-%m-%d').date()
+        start_date = datetime.strptime(week, '%Y-%m-%d')
     elif month:
-        start_date = datetime.strptime(month, '%Y-%m-%d').date().replace(day=1)
+        start_date = datetime.strptime(month, '%Y-%m-%d').replace(day=1)
     elif day:
-        start_date = datetime.strptime(day, '%Y-%m-%d').date()
+        start_date = datetime.strptime(day, '%Y-%m-%d')
     else:
         start_date = today - timedelta(days=today.weekday())
 
@@ -130,9 +134,9 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     next_month_start = (start_date + timedelta(days=calendar.monthrange(start_date.year, start_date.month)[1])).replace(day=1)
 
     users = CustomUser.objects.all()
-    available_dates = Availability.objects.filter(day__range=[start_date, end_date])
-    available_times = AvailableTime.objects.filter(availability__day__range=[start_date, end_date])
-    user_vacations = Vacation.objects.filter(first_day__lte=end_date, last_day__gte=start_date)
+    available_dates = Availability.objects.filter(day__range=[start_date.date(), end_date.date()])
+    available_times = AvailableTime.objects.filter(availability__day__range=[start_date.date(), end_date.date()])
+    user_vacations = Vacation.objects.filter(first_day__lte=end_date.date(), last_day__gte=start_date.date())
 
     vacation_map = {vacation.user_id: vacation for vacation in user_vacations}
 
@@ -159,9 +163,9 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
         user_schedule = {}
         for day in date_range:
             if schedule_format == 'day' or schedule_format == 'week':
-                user_schedule[day] = available_times_map.get(user.id, {}).get(day, [])
+                user_schedule[day] = available_times_map.get(user.id, {}).get(day.date(), [])
             elif schedule_format == 'month':
-                user_schedule.update({d: available_times_map.get(user.id, {}).get(d, []) for d in date_range})
+                user_schedule.update({d: available_times_map.get(user.id, {}).get(d.date(), []) for d in date_range})
 
         if user_schedule:
             available_users.append({
@@ -187,21 +191,16 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
     schedule_data = []
 
     for user_id, schedule in generated_schedule.items():
-        user = users.get(id=user_id)
+        user = CustomUser.objects.get(id=user_id)
         if schedule_format == 'week' and schedule:
             schedule_row = {'user': user, 'schedule': []}
             for day in date_range:
-                day_schedule = ""
-                for current_date, work_hours in schedule.items():
-                    # print(f"current_hour: {current_date} work_hours: {work_hours}")
-                    # print(f"Checking: current_hour.date()={current_date}, day={day}")
-                    if current_date == day:
-                        day_schedule += f"{work_hours}<br>"
-                        # print(f"Matched: {current_date} with {work_hours}")
-                if not day_schedule:
-                    day_schedule = "No schedule available"
-                    # print(f"No schedule for day: {day}")
-                schedule_row['schedule'].append(day_schedule)
+                work_hours = schedule.get(day.date(), "No schedule available")
+                if work_hours and isinstance(work_hours, list) and work_hours:
+                    first_work_hour = work_hours[0]  # Extract only the first work hour
+                else:
+                    first_work_hour = ""
+                schedule_row['schedule'].append(first_work_hour)
             schedule_data.append(schedule_row)
 
     data = {
