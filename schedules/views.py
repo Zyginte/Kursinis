@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseForbidden
-from schedules.models import Availability,AvailableTime, Vacation, CustomUser
+from django.http import HttpResponse
+from schedules.models import Availability, Vacation, CustomUser, Schedule
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.contrib.auth.decorators import login_required
@@ -29,14 +29,27 @@ def home(request, week=None):
     date_range = [start_date + timedelta(days=i) for i in range(7)] # SUKURIA SARASA DATU: PRIE PIRMADIENIO DATOS PRIDEDA ATITINKAMA SKAICIU DIENU, KURIAS GAUNAM ITERUOJANT range(7). [start_date + timedelta(days=0) for i in range(0-6)], [start_date + timedelta(days=1) for i in range(0-6)]...
     
     users = CustomUser.objects.all()
+
+    schedule_data = []
+    for user in users:
+        user_schedule = Schedule.objects.filter(user=user, date__range=[start_date, end_date]).order_by('date')
+        schedule_row = {'user': user, 'schedule': []}
+        for day in date_range:
+            work_hours = user_schedule.filter(date=day).first()
+            if work_hours:
+                schedule_row['schedule'].append(work_hours.hours)
+            else:
+                schedule_row['schedule'].append("")
+        schedule_data.append(schedule_row)
     
     data = {
         'users': users,
         'date_range': date_range,
         'start_date': start_date,
         'end_date': end_date,
-        'previous_week': previous_week_start.strftime('%Y-%m-%d'),  # Convert to string
-        'next_week': next_week_start.strftime('%Y-%m-%d'),  # Convert to string
+        'previous_week': previous_week_start.strftime('%Y-%m-%d'),
+        'next_week': next_week_start.strftime('%Y-%m-%d'),
+        'schedule_data': schedule_data,
     }
 
     if 'create_member' in request.GET:
@@ -135,7 +148,6 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
 
     users = CustomUser.objects.all()
     available_dates = Availability.objects.filter(day__range=[start_date.date(), end_date.date()])
-    available_times = AvailableTime.objects.filter(availability__day__range=[start_date.date(), end_date.date()])
     user_vacations = Vacation.objects.filter(first_day__lte=end_date.date(), last_day__gte=start_date.date())
 
     vacation_map = {vacation.user_id: vacation for vacation in user_vacations}
@@ -146,26 +158,20 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
             available_dates_map[availability.user_id] = []
         available_dates_map[availability.user_id].append(availability)
 
-    available_times_map = {}
-    for available_time in available_times:
-        user_id = available_time.availability.user_id
-        day = available_time.availability.day
-        if user_id not in available_times_map:
-            available_times_map[user_id] = {}
-        if day not in available_times_map[user_id]:
-            available_times_map[user_id][day] = []
-        available_times_map[user_id][day].append(available_time)
-
     available_users = []
     not_available_users = []
 
     for user in users:
         user_schedule = {}
         for day in date_range:
-            if schedule_format == 'day' or schedule_format == 'week':
-                user_schedule[day] = available_times_map.get(user.id, {}).get(day.date(), [])
-            elif schedule_format == 'month':
-                user_schedule.update({d: available_times_map.get(user.id, {}).get(d.date(), []) for d in date_range})
+            availabilities = available_dates_map.get(user.id, [])
+            for availability in availabilities:
+                if availability.day == day.date():
+                    work_hours = f"{availability.start_time.strftime('%I:%M %p').lstrip('0').replace(' 0', ' ')} - {availability.end_time.strftime('%I:%M %p').lstrip('0').replace(' 0', ' ')}"
+                    user_schedule[day] = work_hours
+                    break
+            else:
+                user_schedule[day] = "No schedule available"
 
         if user_schedule:
             available_users.append({
@@ -187,20 +193,22 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
                     'on_vacation_until': None,
                 })
 
-    generated_schedule = generate_schedule(week=week)
-    schedule_data = []
+    # Fetch the already generated schedule from the database
+    generated_schedule = {}
+    for schedule in Schedule.objects.filter(date__range=[start_date.date(), end_date.date()]):
+        if schedule.user_id not in generated_schedule:
+            generated_schedule[schedule.user_id] = {}
+        generated_schedule[schedule.user_id][schedule.date] = schedule.hours
 
+    schedule_data = []
     for user_id, schedule in generated_schedule.items():
         user = CustomUser.objects.get(id=user_id)
-        if schedule_format == 'week' and schedule:
+        if schedule_format == 'week':
             schedule_row = {'user': user, 'schedule': []}
             for day in date_range:
-                work_hours = schedule.get(day.date(), "No schedule available")
-                if work_hours and isinstance(work_hours, list) and work_hours:
-                    first_work_hour = work_hours[0]  # Extract only the first work hour
-                else:
-                    first_work_hour = ""
-                schedule_row['schedule'].append(first_work_hour)
+                day_str = day.date().isoformat()
+                work_hours = schedule.get(day.date(), "")
+                schedule_row['schedule'].append({'date': day_str, 'work_hours': work_hours})
             schedule_data.append(schedule_row)
 
     data = {
@@ -227,6 +235,20 @@ def user_availability(request, schedule_format='week', day=None, week=None, mont
 
 def generate_weekly_schedule(request):
     if request.method == 'POST' and request.user.is_superuser:
-        generate_schedule()
-        return redirect('user_availability_format', schedule_format='week')
-    return redirect('user_availability_format', schedule_format='week')
+        week = request.POST.get('week')
+        if week:
+            generated_schedule = generate_schedule(week)
+
+            for user_id, schedule in generated_schedule.items():
+                for date, hours in schedule.items():
+                    Schedule.objects.update_or_create(
+                        user_id=user_id,
+                        date=date,
+                        defaults={'hours': hours}
+                    )
+
+            messages.success(request, f"Schedule for the week starting {week} has been generated.")
+        else:
+            messages.error(request, "No week specified.")
+        return redirect('user_availability_format_with_week', schedule_format='week', week=week)
+    return redirect('user_availability_format_with_week', schedule_format='week')

@@ -70,8 +70,12 @@
         {% for row in schedule_data %}
             <tr>
                 <td>{{ row.user.name }} {{ row.user.last_name }}</td>
-                {% for day_schedule in row.schedule %}
-                    <td>{{ day_schedule|safe }}</td>
+                {% for day in date_range %}
+                    {% for day_schedule in row.schedule %}
+                        {% if day_schedule.date == day.date.isoformat %}
+                            <td>{{ day_schedule.work_hours }}</td>
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
             </tr>
         {% endfor %}
@@ -85,6 +89,7 @@
         {% if user.is_authenticated and user.is_superuser %}
             <form method="post" action="{% url 'generate_weekly_schedule' %}">
                 {% csrf_token %}
+                <input type="hidden" name="week" value="{{ start_date|date:'Y-m-d' }}">
                 <button type="submit" class="btn btn-primary">Generate New Week</button>
             </form>
         {% endif %}
@@ -106,12 +111,12 @@
     </thead>
 
     <tbody>
-        {% for user_data in not_available_users %}
+        {% for user in not_available_users %}
             <tr>
-                <td>{{ user_data.user.name }} {{ user_data.user.last_name }}</td>
-                {% if user_data.on_vacation_from %}
-                    <td>{{ user_data.on_vacation_from }}</td>
-                    <td>{{ user_data.on_vacation_until }}</td>
+                <td>{{ user.name }} {{ user.last_name }}</td>
+                {% if user.on_vacation_from %}
+                    <td>{{ user.on_vacation_from }}</td>
+                    <td>{{ user.on_vacation_until }}</td>
                 {% else %}
                     <td>N/A</td>
                     <td>N/A</td>

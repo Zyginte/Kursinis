@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.db.models import Q
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.urls import reverse
 from phonenumber_field.modelfields import PhoneNumberField
@@ -90,7 +89,6 @@ class Vacation(models.Model):
 class Availability(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     day = models.DateField('Day', null=False)
-    is_available = models.BooleanField(default=True) #NEED TO REMOVE
     start_time = models.TimeField('Available from', null=True, blank=True)
     end_time = models.TimeField('Available to', null=True, blank=True)
 
@@ -99,20 +97,19 @@ class Availability(models.Model):
         verbose_name_plural = 'Availabilities'
 
     def __str__(self):
-        availability_status = "Available" if self.is_available else "Not Available" 
-        return f'{self.user} - {self.day} ({availability_status})'
-
-class AvailableTime(models.Model): #NEED TO MERGE WITH AVAILABILITY
-    availability = models.ForeignKey(Availability, related_name='available_times', on_delete=models.CASCADE)
-    start_time = models.TimeField('Available from', null=True, blank=True)
-    end_time = models.TimeField('Available to', null=True, blank=True)
+        return f'{self.user} - {self.day} - {self.start_time} to {self.end_time}'
+    
+#----------SCHEDULE----------#
+class Schedule(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateField()
+    hours = models.CharField(max_length=255)
 
     class Meta:
-        verbose_name = 'Available Time'
-        verbose_name_plural = 'Available Times'
+        unique_together = ('user', 'date')
 
     def __str__(self):
-        return f'{self.availability.user} - {self.availability.day} - {self.start_time} to {self.end_time}'
+        return f"{self.user} - {self.date}: {self.hours}"
 
 #python manage.py makemigrations
 #python manage.py migrate

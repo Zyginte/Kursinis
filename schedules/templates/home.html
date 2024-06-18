@@ -81,13 +81,11 @@
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
+                {% for row in schedule_data %}
                 <tr>
-                    <td>{{ user.name }} {{ user.last_name }}</td>
-                    {% for day in date_range %}
-                    <td>
-                        <!-- Add your logic here for each user's schedule -->
-                    </td>
+                    <td>{{ row.user.name }} {{ row.user.last_name }}</td>
+                    {% for work_hours in row.schedule %}
+                    <td>{{ work_hours }}</td>
                     {% endfor %}
                 </tr>
                 {% endfor %}

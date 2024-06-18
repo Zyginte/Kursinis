@@ -64,8 +64,6 @@ class AvailabilityAdmin(admin.ModelAdmin):
     list_display = ('user', 'day', 'start_time', 'end_time')
 
 
-
-
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Vacation, VacationAdmin)
 admin.site.register(Availability, AvailabilityAdmin)

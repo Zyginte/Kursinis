@@ -3,6 +3,8 @@ from .views import home, user_availability, user_profile, edit_profile, create_m
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+
 #Nurodome marsrutus ir puslapius
 urlpatterns = [
     path('', home, name='home'),  # URL for the home page
